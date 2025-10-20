@@ -4,6 +4,121 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.4.1:
+
+v10.4.1 (2025-09-13)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Fix error where ``--no-tag`` is not respected, closes `#1304`_ (`PR#1329`_,
+  `b090fa2`_)
+
+📖 Documentation
+----------------
+
+* **CHANGELOG**: Update hyperlink in v10.4.0's additional info paragraph (`PR#1323`_, `98ef722`_)
+
+* **getting-started-guide**: Remove notice about lack of monorepo support, closes `#1326`_
+  (`PR#1327`_, `3f21f3f`_)
+
+* **github-actions**: Fix recommended upstream detection script's upstream name parsing (`PR#1328`_,
+  `ccc91c0`_)
+
+.. _#1304: https://github.com/python-semantic-release/python-semantic-release/issues/1304
+.. _#1326: https://github.com/python-semantic-release/python-semantic-release/issues/1326
+.. _3f21f3f: https://github.com/python-semantic-release/python-semantic-release/commit/3f21f3fc47a0dacc11ec95feb2a23f8cf132e77b
+.. _98ef722: https://github.com/python-semantic-release/python-semantic-release/commit/98ef722b65bd6a37492cf7ec8b0425800f719114
+.. _b090fa2: https://github.com/python-semantic-release/python-semantic-release/commit/b090fa2efc0ebfb40bdc572fea307d356af95a3f
+.. _ccc91c0: https://github.com/python-semantic-release/python-semantic-release/commit/ccc91c09fab45358c7e52b42e6c0607c68c9d8f3
+.. _PR#1323: https://github.com/python-semantic-release/python-semantic-release/pull/1323
+.. _PR#1327: https://github.com/python-semantic-release/python-semantic-release/pull/1327
+.. _PR#1328: https://github.com/python-semantic-release/python-semantic-release/pull/1328
+.. _PR#1329: https://github.com/python-semantic-release/python-semantic-release/pull/1329
+
+
+.. _changelog-v10.4.0:
+
+v10.4.0 (2025-09-08)
+====================
+
+✨ Features
+-----------
+
+* **config**: Add ``conventional-monorepo`` as valid ``commit_parser`` type (`PR#1143`_, `e18f866`_)
+
+* **parser**: Add new conventional-commits standard parser for monorepos, closes `#614`_
+  (`PR#1143`_, `e18f866`_)
+
+📖 Documentation
+----------------
+
+* Add configuration guide for monorepo use with PSR (`PR#1143`_, `e18f866`_)
+
+* **commit-parsers**: Introduce conventional commit monorepo parser options & features (`PR#1143`_,
+  `e18f866`_)
+
+* **configuration**: Update ``commit_parser`` option with new ``conventional-monorepo`` value
+  (`PR#1143`_, `e18f866`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **config**: This release introduces a new built-in parser type that can be utilized for monorepo
+  projects. The type value is ``conventional-monorepo`` and when specified it will apply the
+  conventional commit parser to a monorepo environment. This parser has specialized options to help
+  handle monorepo projects as well. For more information, please refer to the `Monorepo Docs`_.
+
+.. _#614: https://github.com/python-semantic-release/python-semantic-release/issues/614
+.. _e18f866: https://github.com/python-semantic-release/python-semantic-release/commit/e18f86640a78b374a327848b9e2ba868003d1a43
+.. _Monorepo Docs: /configuration/configuration-guides/monorepos.html
+.. _PR#1143: https://github.com/python-semantic-release/python-semantic-release/pull/1143
+
+
+.. _changelog-v10.3.2:
+
+v10.3.2 (2025-09-06)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-version**: Prevent errors when PSR is executed in non-GitHub CI environments, closes
+  `#1315`_ (`PR#1322`_, `4df4be4`_)
+
+⚡ Performance Improvements
+---------------------------
+
+* **cmd-version**: Re-order operations for faster parsing in version determination (`PR#1310`_,
+  `63e435b`_)
+
+📖 Documentation
+----------------
+
+* **uv-integration**: Add ``--no-changelog`` to build step to increase job speed (`PR#1316`_,
+  `e1aece1`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **cmd-version**: Unfortunately, PSR introduced a bug in 10.3.0 when attempting to provide more CI
+  outputs for GitHub Actions. It required our GitHub client interface to be loaded and even if it
+  was not using GitHub CI to be run. This caused errors in Gitea and likely GitLab/Bitbucket
+  environments. This change prevents that from happening but if any users pipelines were
+  intentionally presenting the environment variable "GITHUB_OUTPUT" to enable action output to
+  enable passing along internal outputs of PSR then their hack will no longer work after this
+  change.
+
+.. _#1315: https://github.com/python-semantic-release/python-semantic-release/issues/1315
+.. _4df4be4: https://github.com/python-semantic-release/python-semantic-release/commit/4df4be465710e3b31ba65487069eccef1eeb8be1
+.. _63e435b: https://github.com/python-semantic-release/python-semantic-release/commit/63e435ba466e1e980b9680d0f759950e5e598a61
+.. _e1aece1: https://github.com/python-semantic-release/python-semantic-release/commit/e1aece18ae1998b1523be65b1e569837a7054251
+.. _PR#1310: https://github.com/python-semantic-release/python-semantic-release/pull/1310
+.. _PR#1316: https://github.com/python-semantic-release/python-semantic-release/pull/1316
+.. _PR#1322: https://github.com/python-semantic-release/python-semantic-release/pull/1322
+
+
 .. _changelog-v10.3.1:
 
 v10.3.1 (2025-08-06)

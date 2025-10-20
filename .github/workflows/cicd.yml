@@ -19,7 +19,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           fetch-depth: 100 # Must at least retrieve a set of commits to compare changes
           # primarily because of any 'Rebase and Merge' PR action in GitHub
@@ -73,8 +73,11 @@ jobs:
       group: ${{ github.workflow }}-validate-${{ github.ref_name }}
       cancel-in-progress: true
     with:
-      python-versions-linux: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
-      python-versions-windows: '["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]'
+      # It was a bit of overkill before testing every minor version, and since this project is all about
+      # SemVer, we should expect Python to adhere to that model to. Therefore Only test across 2 OS's but
+      # the lowest supported minor version and the latest stable minor version.
+      python-versions-linux: '["3.8", "3.13"]'
+      python-versions-windows: '["3.8", "3.13"]'
       files-changed: ${{ needs.eval-changes.outputs.any-file-changes }}
       build-files-changed: ${{ needs.eval-changes.outputs.build-changes }}
       ci-files-changed: ${{ needs.eval-changes.outputs.ci-changes }}
@@ -112,7 +115,7 @@ jobs:
       # possible that the branch was updated while the workflow was running. This
       # prevents accidentally releasing un-evaluated changes.
       - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@v4
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8  # v5.0.0
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
@@ -122,7 +125,7 @@ jobs:
           git reset --hard ${{ github.sha }}
 
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -145,14 +148,14 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@2896129e02bb7809d2cf0c1b8e9e795ee27acbcf  # v10.2.0
+        uses: python-semantic-release/python-semantic-release@4d4cb0ab842247caea1963132c242c62aab1e4d5  # v10.4.1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@b717f67f7e7e9f709357bce5a542846503ce46ec  # v10.2.0
+        uses: python-semantic-release/publish-action@ae6462adc12bd3d1738070d784b65b5189b955a9  # v10.4.1
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -204,7 +207,7 @@ jobs:
 
     steps:
       - name: Setup | Download Build Artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0  # v5.0.0
         id: artifact-download
         with:
           name: ${{ needs.validate.outputs.distribution-artifacts }}
@@ -213,7 +216,7 @@ jobs:
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
-        uses: pypa/gh-action-pypi-publish@v1.12.4
+        uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           packages-dir: dist
           print-hash: true
