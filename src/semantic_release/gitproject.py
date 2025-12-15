@@ -90,6 +90,42 @@ class GitProject:
         with Repo(str(self.project_root)) as repo:
             return repo.is_dirty()
 
+    def is_shallow_clone(self) -> bool:
+        """
+        Check if the repository is a shallow clone.
+
+        :return: True if the repository is a shallow clone, False otherwise
+        """
+        with Repo(str(self.project_root)) as repo:
+            shallow_file = Path(repo.git_dir, "shallow")
+            return shallow_file.exists()
+
+    def git_unshallow(self, noop: bool = False) -> None:
+        """
+        Convert a shallow clone to a full clone by fetching the full history.
+
+        :param noop: Whether or not to actually run the unshallow command
+        """
+        if noop:
+            noop_report("would have run:\n" "    git fetch --unshallow")
+            return
+
+        with Repo(str(self.project_root)) as repo:
+            try:
+                self.logger.info("Converting shallow clone to full clone...")
+                repo.git.fetch("--unshallow")
+                self.logger.info("Repository unshallowed successfully")
+            except GitCommandError as err:
+                # If the repository is already a full clone, git fetch --unshallow will fail
+                # with "fatal: --unshallow on a complete repository does not make sense"
+                # We can safely ignore this error by checking the stderr message
+                stderr = str(err.stderr) if err.stderr else ""
+                if "does not make sense" in stderr or "complete repository" in stderr:
+                    self.logger.debug("Repository is already a full clone")
+                else:
+                    self.logger.exception(str(err))
+                    raise
+
     def git_add(
         self,
         paths: Sequence[Path | str],
@@ -202,7 +238,12 @@ class GitProject:
                     raise GitCommitError("Failed to commit changes") from err
 
     def git_tag(
-        self, tag_name: str, message: str, isotimestamp: str, noop: bool = False
+        self,
+        tag_name: str,
+        message: str,
+        isotimestamp: str,
+        force: bool = False,
+        noop: bool = False,
     ) -> None:
         try:
             datetime.fromisoformat(isotimestamp)
@@ -212,21 +253,25 @@ class GitProject:
         if noop:
             command = str.join(
                 " ",
-                [
-                    f"GIT_COMMITTER_DATE={isotimestamp}",
-                    *(
-                        [
-                            f"GIT_AUTHOR_NAME={self._commit_author.name}",
-                            f"GIT_AUTHOR_EMAIL={self._commit_author.email}",
-                            f"GIT_COMMITTER_NAME={self._commit_author.name}",
-                            f"GIT_COMMITTER_EMAIL={self._commit_author.email}",
-                        ]
-                        if self._commit_author
-                        else [""]
-                    ),
-                    f"git tag -a {tag_name} -m '{message}'",
-                ],
-            )
+                filter(
+                    None,
+                    [
+                        f"GIT_COMMITTER_DATE={isotimestamp}",
+                        *(
+                            [
+                                f"GIT_AUTHOR_NAME={self._commit_author.name}",
+                                f"GIT_AUTHOR_EMAIL={self._commit_author.email}",
+                                f"GIT_COMMITTER_NAME={self._commit_author.name}",
+                                f"GIT_COMMITTER_EMAIL={self._commit_author.email}",
+                            ]
+                            if self._commit_author
+                            else [""]
+                        ),
+                        f"git tag -a {tag_name} -m '{message}'",
+                        "--force" if force else "",
+                    ],
+                ),
+            ).strip()
 
             noop_report(
                 indented(
@@ -243,7 +288,7 @@ class GitProject:
             {"GIT_COMMITTER_DATE": isotimestamp},
         ):
             try:
-                repo.git.tag("-a", tag_name, m=message)
+                repo.git.tag(tag_name, a=True, m=message, force=force)
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 raise GitTagError(f"Failed to create tag ({tag_name})") from err
@@ -269,13 +314,15 @@ class GitProject:
                     f"Failed to push branch ({branch}) to remote"
                 ) from err
 
-    def git_push_tag(self, remote_url: str, tag: str, noop: bool = False) -> None:
+    def git_push_tag(
+        self, remote_url: str, tag: str, noop: bool = False, force: bool = False
+    ) -> None:
         if noop:
             noop_report(
                 indented(
                     f"""\
                     would have run:
-                        git push {self._cred_masker.mask(remote_url)} tag {tag}
+                        git push {self._cred_masker.mask(remote_url)} tag {tag} {"--force" if force else ""}
                     """  # noqa: E501
                 )
             )
@@ -283,22 +330,28 @@ class GitProject:
 
         with Repo(str(self.project_root)) as repo:
             try:
-                repo.git.push(remote_url, "tag", tag)
+                repo.git.push(remote_url, "tag", tag, force=force)
             except GitCommandError as err:
                 self.logger.exception(str(err))
                 raise GitPushError(f"Failed to push tag ({tag}) to remote") from err
 
-    def verify_upstream_unchanged(
-        self, local_ref: str = "HEAD", noop: bool = False
+    def verify_upstream_unchanged(  # noqa: C901
+        self, local_ref: str = "HEAD", upstream_ref: str = "origin", noop: bool = False
     ) -> None:
         """
         Verify that the upstream branch has not changed since the given local reference.
 
         :param local_ref: The local reference to compare against upstream (default: HEAD)
+        :param upstream_ref: The name of the upstream remote or specific remote branch (default: origin)
         :param noop: Whether to skip the actual verification (for dry-run mode)
 
         :raises UpstreamBranchChangedError: If the upstream branch has changed
         """
+        if not local_ref.strip():
+            raise ValueError("Local reference cannot be empty")
+        if not upstream_ref.strip():
+            raise ValueError("Upstream reference cannot be empty")
+
         if noop:
             noop_report(
                 indented(
@@ -321,12 +374,30 @@ class GitProject:
                 raise DetachedHeadGitError(err_msg) from None
 
             # Get the tracking branch (upstream branch)
-            if (tracking_branch := active_branch.tracking_branch()) is None:
-                err_msg = f"No upstream branch found for '{active_branch.name}'; cannot verify upstream state!"
-                raise UnknownUpstreamBranchError(err_msg)
+            if (tracking_branch := active_branch.tracking_branch()) is not None:
+                upstream_full_ref_name = tracking_branch.name
+                self.logger.info("Upstream branch name: %s", upstream_full_ref_name)
+            else:
+                # If no tracking branch is set, derive it
+                upstream_name = (
+                    upstream_ref.strip()
+                    if upstream_ref.find("/") == -1
+                    else upstream_ref.strip().split("/", maxsplit=1)[0]
+                )
 
-            upstream_full_ref_name = tracking_branch.name
-            self.logger.info("Upstream branch name: %s", upstream_full_ref_name)
+                if not repo.remotes or upstream_name not in repo.remotes:
+                    err_msg = "No remote found; cannot verify upstream state!"
+                    raise UnknownUpstreamBranchError(err_msg)
+
+                upstream_full_ref_name = (
+                    f"{upstream_name}/{active_branch.name}"
+                    if upstream_ref.find("/") == -1
+                    else upstream_ref.strip()
+                )
+
+                if upstream_full_ref_name not in repo.refs:
+                    err_msg = f"No upstream branch found for '{active_branch.name}'; cannot verify upstream state!"
+                    raise UnknownUpstreamBranchError(err_msg)
 
             # Extract the remote name from the tracking branch
             # tracking_branch.name is in the format "remote/branch"

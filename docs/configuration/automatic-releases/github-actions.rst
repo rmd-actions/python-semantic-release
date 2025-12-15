@@ -875,17 +875,16 @@ to the GitHub Release Assets as well.
           contents: write
 
         steps:
-          # Note: We checkout the repository at the branch that triggered the workflow
-          # with the entire history to ensure to match PSR's release branch detection
-          # and history evaluation.
-          # However, we forcefully reset the branch to the workflow sha because it is
-          # possible that the branch was updated while the workflow was running. This
-          # prevents accidentally releasing un-evaluated changes.
+          # Note: We checkout the repository at the branch that triggered the workflow.
+          # Python Semantic Release will automatically convert shallow clones to full clones
+          # if needed to ensure proper history evaluation. However, we forcefully reset the
+          # branch to the workflow sha because it is possible that the branch was updated
+          # while the workflow was running, which prevents accidentally releasing un-evaluated
+          # changes.
           - name: Setup | Checkout Repository on Release Branch
             uses: actions/checkout@v4
             with:
               ref: ${{ github.ref_name }}
-              fetch-depth: 0
 
           - name: Setup | Force release branch to be at workflow sha
             run: |
@@ -894,14 +893,14 @@ to the GitHub Release Assets as well.
           - name: Action | Semantic Version Release
             id: release
             # Adjust tag with desired version if applicable.
-            uses: python-semantic-release/python-semantic-release@v10.4.1
+            uses: python-semantic-release/python-semantic-release@v10.5.2
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
               git_committer_name: "github-actions"
               git_committer_email: "actions@users.noreply.github.com"
 
           - name: Publish | Upload to GitHub Release Assets
-            uses: python-semantic-release/publish-action@v10.4.1
+            uses: python-semantic-release/publish-action@v10.5.2
             if: steps.release.outputs.released == 'true'
             with:
               github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -960,11 +959,6 @@ to the GitHub Release Assets as well.
   of time.
 
 .. warning::
-  You must set ``fetch-depth`` to 0 when using ``actions/checkout@v4``, since
-  Python Semantic Release needs access to the full history to build a changelog
-  and at least the latest tags to determine the next version.
-
-.. warning::
   The ``GITHUB_TOKEN`` secret is automatically configured by GitHub, with the
   same permissions role as the user who triggered the workflow run. This causes
   a problem if your default branch is protected to specific users.
@@ -975,7 +969,15 @@ to the GitHub Release Assets as well.
   the ``token`` input) in order to gain push access.
 
 .. note::
-  As of $NEW_RELEASE_TAG, the verify upstream step is no longer required as it has been
+  As of v10.5.0, Python Semantic Release automatically detects and converts
+  shallow clones to full clones when needed. While you can still use ``fetch-depth: 0``
+  with ``actions/checkout@v4`` to fetch the full history upfront, it is no longer
+  required. If you use the default shallow clone, Python Semantic Release will
+  automatically fetch the full history before evaluating commits. If you are using
+  an older version of PSR, you will need to unshallow the repository prior to use.
+
+.. note::
+  As of v10.5.0, the verify upstream step is no longer required as it has been
   integrated into PSR directly. If you are using an older version of PSR, you will need
   to review the older documentation for that step. See Issue `#1201`_ for more details.
 
@@ -1003,7 +1005,7 @@ The equivalent GitHub Action configuration would be:
 
   - name: Action | Semantic Version Release
     # Adjust tag with desired version if applicable.
-    uses: python-semantic-release/python-semantic-release@v10.4.1
+    uses: python-semantic-release/python-semantic-release@v10.5.2
     with:
       github_token: ${{ secrets.GITHUB_TOKEN }}
       force: patch
@@ -1062,14 +1064,14 @@ Publish Action.
 
         - name: Release submodule 1
           id: release-submod-1
-          uses: python-semantic-release/python-semantic-release@v10.4.1
+          uses: python-semantic-release/python-semantic-release@v10.5.2
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
 
         - name: Release submodule 2
           id: release-submod-2
-          uses: python-semantic-release/python-semantic-release@v10.4.1
+          uses: python-semantic-release/python-semantic-release@v10.5.2
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}
             github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -1081,7 +1083,7 @@ Publish Action.
         # ------------------------------------------------------------------- #
 
         - name: Publish | Upload package 1 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v10.4.1
+          uses: python-semantic-release/publish-action@v10.5.2
           if: steps.release-submod-1.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_1_DIR }}
@@ -1089,7 +1091,7 @@ Publish Action.
             tag: ${{ steps.release-submod-1.outputs.tag }}
 
         - name: Publish | Upload package 2 to GitHub Release Assets
-          uses: python-semantic-release/publish-action@v10.4.1
+          uses: python-semantic-release/publish-action@v10.5.2
           if: steps.release-submod-2.outputs.released == 'true'
           with:
             directory: ${{ env.SUBMODULE_2_DIR }}

@@ -1162,6 +1162,52 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 
 ----
 
+.. _config-add_partial_tags:
+
+``add_partial_tags``
+""""""""""""""""""""
+
+**Type:** ``bool``
+
+Specify if partial version tags should be handled when creating a new version. If set to
+``true``, a ``major`` and a ``major.minor`` tag will be created or updated, using the format
+specified in :ref:`tag_format`. If version has build metadata, a ``major.minor.patch`` tag
+will also be created or updated.
+
+Partial version tags are **disabled** for pre-release versions.
+
+**Example**
+
+.. code-block:: toml
+
+    [semantic_release]
+    tag_format = "v{version}"
+    add_partial_tags = true
+
+This configuration with the next version of ``1.2.3`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3
+    # * 3a2b1c0 fix: some bug
+    # * 2b1c0a9 (tag: v1.2.2) 1.2.2
+    # ...
+
+If build-metadata is used, the next version of ``1.2.3+20251109`` will result in:
+
+.. code-block:: bash
+
+    git log --decorate --oneline --graph --all
+    # * 4d4cb0a (tag: v1.2.3+20251109, tag: v1.2.3, tag: v1.2, tag: v1, origin/main, main) 1.2.3+20251109
+    # * 3a2b1c0 chore: add partial tags to PSR configuration
+    # * 2b1c0a9 (tag: v1.2.3+20251031) 1.2.3+20251031
+    # ...
+
+**Default:** ``false``
+
+----
+
 .. _config-tag_format:
 
 ``tag_format``
@@ -1170,17 +1216,8 @@ from the :ref:`remote.name <config-remote-name>` location of your git repository
 **Type:** ``str``
 
 Specify the format to be used for the Git tag that will be added to the repo during
-a release invoked via :ref:`cmd-version`. The format string is a regular expression,
-which also must include the format keys below, otherwise an exception will be thrown.
-It *may* include any of the optional format keys, in which case the contents
-described will be formatted into the specified location in the Git tag that is created.
-
-For example, ``"(dev|stg|prod)-v{version}"`` is a valid ``tag_format`` matching tags such
-as:
-
-- ``dev-v1.2.3``
-- ``stg-v0.1.0-rc.1``
-- ``prod-v2.0.0+20230701``
+a release invoked via :ref:`cmd-version`. The string is used as a template for the tag
+name, and must include the ``{version}`` format key.
 
 This format will also be used for parsing tags already present in the repository into
 semantic versions; therefore if the tag format changes at some point in the
@@ -1195,6 +1232,13 @@ Format Key       Mandatory  Contents
 ================ =========  ==========================================================
 
 Tags which do not match this format will not be considered as versions of your project.
+
+This is critical for Monorepo projects where the tag format defines which package the
+version tag belongs to. Generally, the tag format for each package of the monorepo will
+include the package name as the prefix of the tag format. For example, if the package
+is named ``pkg1``, the tag format would be ``pkg1-v{version}`` and in the other package
+``pkg2``, the tag format would be ``pkg2-v{version}``. This allows PSR to determine
+which tags to use to determine the version for each package.
 
 **Default:** ``"v{version}"``
 
@@ -1354,7 +1398,7 @@ The regular expression generated from the ``version_variables`` definition will:
 2. The variable name defined by ``variable`` and the version must be separated by
    an operand symbol (``=``, ``:``, ``:=``, or ``@``). Whitespace is optional around
    the symbol. As of v10.0.0, a double-equals (``==``) operator is also supported
-   as a valid operand symbol. As of $NEW_RELEASE_TAG, PSR can omit all operands as long
+   as a valid operand symbol. As of v10.5.0, PSR can omit all operands as long
    as there is at least one whitespace character between the variable name and the version.
 
 3. The value of the variable must match a `SemVer`_ regular expression and can be
