@@ -7,6 +7,7 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 from hashlib import md5
+from importlib.metadata import version as get_package_version
 from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import TYPE_CHECKING, cast
@@ -193,9 +194,17 @@ def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item
                 item.add_marker(comprehensive_test_skip_marker)
 
 
+def get_cli_runner() -> CliRunner:
+    return (
+        CliRunner()
+        if tuple(map(int, get_package_version("click").split("."))) >= (8, 2, 0)
+        else CliRunner(mix_stderr=False)  # type: ignore[call-arg]
+    )
+
+
 @pytest.fixture
 def cli_runner() -> CliRunner:
-    return CliRunner(mix_stderr=False)
+    return get_cli_runner()
 
 
 @pytest.fixture(scope="session")
@@ -211,7 +220,7 @@ def run_cli(clean_os_environment: dict[str, str]) -> RunCliFn:
         # Prevent logs from being propagated to the root logger (pytest)
         logger.propagate = False
 
-        cli_runner = CliRunner(mix_stderr=False)
+        cli_runner = get_cli_runner()
         env_vars = {**clean_os_environment, **(env or {})}
         args = ["-vv", *(argv or [])]
 

@@ -112,7 +112,7 @@ jobs:
 
       - name: Build | Build next version artifacts
         id: version
-        uses: python-semantic-release/python-semantic-release@37a30a7987cfebb6d49240bf1c4e9cd9817d0673  # v10.6.0
+        uses: python-semantic-release/python-semantic-release@39dd2052f2ce8282a5d932c31d58a2ca06d2550e  # v10.6.1
         with:
           github_token: ""
           verbosity: 1
@@ -451,10 +451,10 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 1
 
-      - name: Setup | Install Python ${{ env.COMMON_PYTHON_VERSION }}
+      - name: Setup | Install Python ${{ env.LOWEST_PYTHON_VERSION }}
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
-          python-version: ${{ env.COMMON_PYTHON_VERSION }}
+          python-version: ${{ env.LOWEST_PYTHON_VERSION }}
           cache: 'pip'
 
       - name: Setup | Install dependencies
