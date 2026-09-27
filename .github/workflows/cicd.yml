@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Setup | Checkout Repository
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           fetch-depth: 0
 
@@ -115,7 +115,7 @@ jobs:
       # possible that the branch was updated while the workflow was running. This
       # prevents accidentally releasing un-evaluated changes.
       - name: Setup | Checkout Repository on Release Branch
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
         with:
           ref: ${{ github.ref_name }}
           fetch-depth: 0
@@ -142,14 +142,14 @@ jobs:
 
       - name: Release | Python Semantic Release
         id: release
-        uses: python-semantic-release/python-semantic-release@39dd2052f2ce8282a5d932c31d58a2ca06d2550e  # v10.6.1
+        uses: python-semantic-release/python-semantic-release@b700dbeb1f431a0fcc30a79f3f0869407fe07278  # v10.7.0
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           verbosity: 1
           build: false
 
       - name: Release | Add distribution artifacts to GitHub Release Assets
-        uses: python-semantic-release/publish-action@5a5718ce47b892ef699f2972dae122297771d641  # v10.6.1
+        uses: python-semantic-release/publish-action@99d4062dd393b5a7a62c5fe9ed78fb364b5674f2  # v10.7.0
         if: steps.release.outputs.released == 'true'
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -188,7 +188,7 @@ jobs:
       # see https://docs.pypi.org/trusted-publishers/
       - name: Publish package distributions to PyPI
         id: pypi-publish
-        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b  # v1.14.0
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33  # v1.14.2
         with:
           packages-dir: dist
           print-hash: true

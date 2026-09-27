@@ -4,6 +4,88 @@
 CHANGELOG
 =========
 
+.. _changelog-v10.7.0:
+
+v10.7.0 (2026-09-22)
+====================
+
+✨ Features
+-----------
+
+* **cmd-stamp**: Expand version stamp mechanism to support typed python variables, closes `#1443`_
+  (`PR#1485`_, `947c57b`_)
+
+* **cmd-version**: Add optional ``git --signoff`` to version commits, closes `#1441`_ (`PR#1492`_,
+  `3cecbeb`_)
+
+📖 Documentation
+----------------
+
+* **configuration**: Added ``signoff_commit`` setting definition (`PR#1492`_, `3cecbeb`_)
+
+* **configuration**: Document Python type annotation support for ``version_variables`` (`PR#1485`_,
+  `947c57b`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Correct ``click`` range specification for python3.10+ (`PR#1486`_, `e4b3bad`_)
+
+* **deps**: Expand ``click`` dependency range to include ``v8.5.*`` (`PR#1489`_, `fa87c95`_)
+
+💡 Additional Release Information
+---------------------------------
+
+* **cmd-version**: With this release, we added a boolean flag, ``semantic_release.signoff_commit``,
+  as an available configuration option to toggle the addition of the ``Signed-off-by`` git
+  trailer/footer message to release commits made by Python Semantic Release. Default is currently
+  set to ``False`` but if you want to try this option, set this configuration setting to ``True``.
+  In a future major release, this setting will be set to ``True`` by default.
+
+.. _#1441: https://github.com/python-semantic-release/python-semantic-release/issues/1441
+.. _#1443: https://github.com/python-semantic-release/python-semantic-release/issues/1443
+.. _3cecbeb: https://github.com/python-semantic-release/python-semantic-release/commit/3cecbebb9a87ff6adf46e9334f18bd9c84655608
+.. _947c57b: https://github.com/python-semantic-release/python-semantic-release/commit/947c57b48bee85753cf40296b98529da26bf4b58
+.. _e4b3bad: https://github.com/python-semantic-release/python-semantic-release/commit/e4b3badb127b751d4946ccd7efb3ec0e8c159895
+.. _fa87c95: https://github.com/python-semantic-release/python-semantic-release/commit/fa87c95ffbdaae3b7516dcc355e57bd5f4632c1f
+.. _PR#1485: https://github.com/python-semantic-release/python-semantic-release/pull/1485
+.. _PR#1486: https://github.com/python-semantic-release/python-semantic-release/pull/1486
+.. _PR#1489: https://github.com/python-semantic-release/python-semantic-release/pull/1489
+.. _PR#1492: https://github.com/python-semantic-release/python-semantic-release/pull/1492
+
+
+.. _changelog-v10.6.2:
+
+v10.6.2 (2026-08-28)
+====================
+
+🪲 Bug Fixes
+------------
+
+* **cmd-changelog**: Fix reading of TOML when file was created on Windows (`9a56ace`_)
+
+* **config**: Validate commit author in config internally, closes `#1476`_ (`PR#1477`_, `10afa8e`_)
+
+⚙️ Build System
+----------------
+
+* **deps**: Adjust ``importlib`` use to maintain 3.8 support (`59fea4f`_)
+
+* **deps**: Bump ``rich`` requirement from ``v14.0+`` to ``v15.0+`` (`PR#1464`_, `abd942d`_)
+
+* **deps**: Bump ``tomlkit`` requirement to ``~=0.15.0`` (`PR#1463`_, `429588d`_)
+
+.. _#1476: https://github.com/python-semantic-release/python-semantic-release/issues/1476
+.. _10afa8e: https://github.com/python-semantic-release/python-semantic-release/commit/10afa8ec4be54216258b275b5e1be0facf8ea8d7
+.. _429588d: https://github.com/python-semantic-release/python-semantic-release/commit/429588da71dfc7bd88ff27618cec2fe843dedd7c
+.. _59fea4f: https://github.com/python-semantic-release/python-semantic-release/commit/59fea4f231bd84c5af58785d9fd487cbcf8d3407
+.. _9a56ace: https://github.com/python-semantic-release/python-semantic-release/commit/9a56ace313a1f3710cc0e0683285cde133704f01
+.. _abd942d: https://github.com/python-semantic-release/python-semantic-release/commit/abd942d71c077e012eb49c43e094c9bf4a352a44
+.. _PR#1463: https://github.com/python-semantic-release/python-semantic-release/pull/1463
+.. _PR#1464: https://github.com/python-semantic-release/python-semantic-release/pull/1464
+.. _PR#1477: https://github.com/python-semantic-release/python-semantic-release/pull/1477
+
+
 .. _changelog-v10.6.1:
 
 v10.6.1 (2026-07-06)
